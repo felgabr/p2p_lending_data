@@ -608,8 +608,8 @@ def plot_roc_curve(y_true: 'pd.Series', y_score: 'pd.Series', save_dir: str = No
     Plots the ROC curve and show AUC score for binary classification.
     
     Args:
-        y_true: True binary labels
-        y_score: Target scores, can either be probability estimates of the positive class, confidence values,
+        y_true: True binary labels.
+        y_score: Target scores, can either be probability estimates of the positive class, confidence values.
         or non-thresholded measure of decisions.
         save_dir: Optional, path to save the chart file.
     '''
@@ -623,8 +623,8 @@ def plot_roc_curve(y_true: 'pd.Series', y_score: 'pd.Series', save_dir: str = No
     fpr, tpr, thresholds = roc_curve(y_true=y_true, y_score=y_score[:,1], pos_label=1)
 
     # Plot roc curve
-    plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc, color='darkslateblue')
-    plt.plot([0, 1], [0, 1], 'r--', color='lightseagreen')
+    plt.plot(fpr, tpr, label = 'AUC = %0.2f' % roc_auc, color='darkslateblue')
+    plt.plot([0, 1], [0, 1], '--', label='Random', color='gray')#color='lightseagreen'
 
     plt.xlim([0, 1])
     plt.ylim([0, 1])
@@ -632,6 +632,47 @@ def plot_roc_curve(y_true: 'pd.Series', y_score: 'pd.Series', save_dir: str = No
     plt.title('Receiver Operating Characteristic')
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
+
+    plt.legend(loc = 'lower right')
+    if save_dir is not None:
+        plt.savefig(save_dir, bbox_inches='tight', dpi=600)
+    plt.show()
+    
+    
+def plot_calibration_curve(y_true: 'np.array', y_pred: 'np.array', caly_pred: 'np.array' = None, save_dir: str = None):
+    '''
+    "Calibration curves (also known as reliability diagrams) compare how well the
+    probabilistic predictions of a binary classifier are calibrated. It plots the
+    true frequency of the positive label against its predicted probability, for
+    binned predictions."
+    
+    Plots calibration Curve.
+    
+    Args:
+        y_true: True binary labels.
+        y_pred: predictions from uncalibrated model.
+        caly_pred: Optional, predictions from calibrated model.
+        save_dir: Optional, path to save the chart file.
+    '''
+    from sklearn.calibration import calibration_curve
+    
+    un_prob_true, un_prob_pred = calibration_curve(y_true, y_pred, n_bins=10)
+    
+    # Plot ideal curve 
+    plt.plot([0, 1], [0, 1], linestyle='--', color='gray', label='Ideal')
+    
+    # Plot Uncalibrated curve
+    plt.plot(un_prob_true, un_prob_pred, marker='.', color='darkslateblue', label='Uncalibrated')
+    
+    if caly_pred is not None:
+        cal_prob_true, cal_prob_pred = calibration_curve(y_true, caly_pred, n_bins=10)
+        
+        plt.plot(cal_prob_true, cal_prob_pred, marker='.', color='lightseagreen', label='Calibrated')
+    
+    # Title and legend
+    plt.title('Calibration Curve')
+    plt.ylabel('Fraction of Positives')
+    plt.xlabel('Mean Predicted Probability')
 
     plt.legend(loc = 'lower right')
     if save_dir is not None:
